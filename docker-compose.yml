@@ -1,0 +1,37 @@
+version: '3'
+services:
+  db:
+    build:
+      context: ./docker/mysql
+    container_name: dreamin_db
+    volumes:
+      - db_data:/var/lib/mysql:cached
+    command: [
+      '--default-authentication-plugin=mysql_native_password',
+      '--character-set-server=utf8mb4',
+      '--skip-character-set-client-handshake',
+      '--collation-server=utf8mb4_general_ci',
+#      '--general-log=1',
+#      '--general-log-file=/var/log/mysql/query.log',
+      '--slow-query-log=1',
+      '--long-query-time=1',
+      '--slow-query-log-file=/var/log/mysql/slow.log',
+      '--log-queries-not-using-indexes=0',
+      '--log-timestamps=SYSTEM'
+    ]
+#    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: bbs
+      MYSQL_USER: bbs
+      MYSQL_PASSWORD: bbspassword
+    networks:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend:
