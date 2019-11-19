@@ -1,0 +1,4 @@
+development:
+  dialect: mysql
+  datasource: bbs:bbspassword@tcp(localhost:3306)/bbs?charset=utf8mb4&parseTime=True&loc=Local
+  dir: config/database/migrations
