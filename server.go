@@ -33,6 +33,7 @@ func main() {
 
 	// Routes
 	e.GET("/categories", getCategories)
+	e.POST("/questions", createQuestion)
 
 	e.Logger.Fatal(e.Start(":1234"))
 }
@@ -41,6 +42,16 @@ func getCategories(c echo.Context) error {
 	var categories categories
 	db.Find(&categories)
 	return c.JSON(http.StatusOK, categories)
+}
+
+func createQuestion(c echo.Context) error {
+	q := new(question)
+	if err := c.Bind(q); err != nil {
+		return c.JSON(http.StatusBadRequest, nil)
+	}
+	db.Create(q)
+	return c.JSON(http.StatusCreated, q)
+
 }
 
 
@@ -52,5 +63,8 @@ type category struct {
 type categories = []category
 
 type question struct {
-	ID int   `json:"id" gorm:"column:id;primary_key"`
+	ID int   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	Title string   `json:"title" gorm:"column:title"`
+	Body string   `json:"body" gorm:"column:body"`
+	CategoryId int   `json:"categoryId" gorm:"column:category_id"`
 }
