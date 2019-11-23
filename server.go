@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/labstack/echo/v4"
@@ -11,6 +12,14 @@ import (
 
 var db *gorm.DB
 var err error
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
+}
 
 func main() {
 
@@ -24,6 +33,8 @@ func main() {
 	defer db.Close()
 
 	e := echo.New()
+
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	db.SetLogger(e.Logger)
 
@@ -45,16 +56,28 @@ func getCategories(c echo.Context) error {
 }
 
 func createQuestion(c echo.Context) error {
-	q := new(question)
-	if err := c.Bind(q); err != nil {
-		return c.JSON(http.StatusBadRequest, nil)
+	// TODO: エラーレスポンスをJSONにする
+	req := new(questionRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	db.Create(q)
+	if err = c.Validate(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	q := newQuestion(req.Title, req.Body, req.CategoryId)
+	db.Create(&q)
 	return c.JSON(http.StatusCreated, q)
-
 }
 
+// Request
+type questionRequest struct {
+	Title  string `json:"title" validate:"required,min=1,max=255"`
+	Body string   `json:"body" validate:"required,min=1,max=5000"`
+	// TODO: カテゴリIDのバリデーションを設定
+	CategoryId int   `json:"categoryId" validate:"required"`
+}
 
+// Model
 type category struct {
 	ID   int    `json:"id" gorm:"column:id;primary_key"`
 	Name string `json:"name" gorm:"column:name"`
@@ -67,4 +90,8 @@ type question struct {
 	Title string   `json:"title" gorm:"column:title"`
 	Body string   `json:"body" gorm:"column:body"`
 	CategoryId int   `json:"categoryId" gorm:"column:category_id"`
+}
+
+func newQuestion(title string, body string, categoryId int) question {
+	return question{Title: title, Body: body, CategoryId: categoryId}
 }
