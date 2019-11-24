@@ -21,6 +21,13 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return cv.validator.Struct(i)
 }
 
+func validateCategoryId(fl validator.FieldLevel) bool {
+	categoryId := fl.Field().Int()
+	c := new(category)
+	db.First(&c, categoryId)
+	return c.ID == int(categoryId)
+}
+
 func main() {
 
 	db, err = gorm.Open("mysql", "bbs:bbspassword@tcp(localhost:3306)/bbs?charset=utf8mb4&parseTime=True&loc=Local")
@@ -34,7 +41,9 @@ func main() {
 
 	e := echo.New()
 
-	e.Validator = &CustomValidator{validator: validator.New()}
+	v:= validator.New()
+	v.RegisterValidation("categoryId", validateCategoryId)
+	e.Validator = &CustomValidator{validator: v}
 
 	db.SetLogger(e.Logger)
 
@@ -73,8 +82,7 @@ func createQuestion(c echo.Context) error {
 type questionRequest struct {
 	Title  string `json:"title" validate:"required,min=1,max=255"`
 	Body string   `json:"body" validate:"required,min=1,max=5000"`
-	// TODO: カテゴリIDのバリデーションを設定
-	CategoryId int   `json:"categoryId" validate:"required"`
+	CategoryId int   `json:"categoryId" validate:"required,categoryId"`
 }
 
 // Model
