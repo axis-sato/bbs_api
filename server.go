@@ -7,7 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
+	"math"
 	"net/http"
+	"strconv"
 )
 
 var db *gorm.DB
@@ -55,6 +57,7 @@ func main() {
 
 	// Routes
 	e.GET("/categories", getCategories)
+	e.GET("/questions", getQuestions)
 	e.POST("/questions", createQuestion)
 
 	e.Logger.Fatal(e.Start(":1234"))
@@ -66,6 +69,21 @@ func getCategories(c echo.Context) error {
 	return c.JSON(http.StatusOK, categories)
 }
 
+func getQuestions(c echo.Context) error {
+	firstID, err := strconv.Atoi(c.QueryParam("first_id"))
+	if err != nil {
+		firstID = math.MaxInt64
+	}
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		limit = 20
+	}
+
+	var questions questions
+	db.Where("id <= ?", firstID).Order("id desc").Preload("Category").Limit(limit).Find(&questions)
+	return c.JSON(http.StatusOK, questions)
+}
+
 func createQuestion(c echo.Context) error {
 	// TODO: エラーレスポンスをJSONにする
 	req := new(questionRequest)
@@ -75,7 +93,7 @@ func createQuestion(c echo.Context) error {
 	if err = c.Validate(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	q := newQuestion(req.Title, req.Body, req.CategoryId)
+	q := newQuestion(req.Title, req.Body, req.CategoryID)
 	db.Create(&q)
 	return c.JSON(http.StatusCreated, q)
 }
@@ -84,7 +102,11 @@ func createQuestion(c echo.Context) error {
 type questionRequest struct {
 	Title  string `json:"title" validate:"required,min=1,max=255"`
 	Body string   `json:"body" validate:"required,min=1,max=5000"`
-	CategoryId int   `json:"categoryId" validate:"required,categoryId"`
+	CategoryID int   `json:"categoryId" validate:"required,categoryId"`
+}
+type questionsRequest struct {
+	FirstID int `query:"first_id" validate:"required"`
+	Limit   int `query:"limit" validate:"required"`
 }
 
 // Model
@@ -99,9 +121,12 @@ type question struct {
 	ID int   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	Title string   `json:"title" gorm:"column:title"`
 	Body string   `json:"body" gorm:"column:body"`
-	CategoryId int   `json:"categoryId" gorm:"column:category_id"`
+	CategoryID int   `json:"categoryId" gorm:"column:category_id"`
+	Category category   `json:"category"`
 }
 
+type questions = []question
+
 func newQuestion(title string, body string, categoryId int) question {
-	return question{Title: title, Body: body, CategoryId: categoryId}
+	return question{Title: title, Body: body, CategoryID: categoryId}
 }
