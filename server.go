@@ -37,12 +37,14 @@ func main() {
 	}
 	db.LogMode(true)
 
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 
 	e := echo.New()
 
 	v:= validator.New()
-	v.RegisterValidation("categoryId", validateCategoryId)
+	_ = v.RegisterValidation("categoryId", validateCategoryId)
 	e.Validator = &CustomValidator{validator: v}
 
 	db.SetLogger(e.Logger)
