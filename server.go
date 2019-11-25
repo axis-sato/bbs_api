@@ -70,9 +70,9 @@ func getCategories(c echo.Context) error {
 }
 
 func getQuestions(c echo.Context) error {
-	firstID, err := strconv.Atoi(c.QueryParam("first_id"))
+	sinceID, err := strconv.Atoi(c.QueryParam("since_id"))
 	if err != nil {
-		firstID = math.MaxInt64
+		sinceID = math.MaxInt64
 	}
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil {
@@ -80,7 +80,7 @@ func getQuestions(c echo.Context) error {
 	}
 
 	var questions questions
-	db.Where("id <= ?", firstID).Order("id desc").Preload("Category").Limit(limit).Find(&questions)
+	db.Where("id < ?", sinceID).Order("id desc").Preload("Category").Limit(limit).Find(&questions)
 	return c.JSON(http.StatusOK, questions)
 }
 
