@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS questions (
     title         VARCHAR(255) NOT NULL,
     body          TEXT NOT NULL,
     category_id   INTEGER UNSIGNED NOT NULL,
+    created_at TIMESTAMP  NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY question_category(category_id) REFERENCES categories(id)
 );

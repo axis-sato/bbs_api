@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 var db *gorm.DB
@@ -93,7 +94,7 @@ func createQuestion(c echo.Context) error {
 	if err = c.Validate(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	q := newQuestion(req.Title, req.Body, req.CategoryID)
+	q := newQuestion(req.Title, req.Body, time.Now(), req.CategoryID)
 	db.Create(&q)
 	return c.JSON(http.StatusCreated, q)
 }
@@ -121,12 +122,13 @@ type question struct {
 	ID int   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	Title string   `json:"title" gorm:"column:title"`
 	Body string   `json:"body" gorm:"column:body"`
+	CreatedAt time.Time   `json:"createdAt" gorm:"column:created_at"`
 	CategoryID int   `json:"categoryId" gorm:"column:category_id"`
 	Category category   `json:"category"`
 }
 
 type questions = []question
 
-func newQuestion(title string, body string, categoryId int) question {
-	return question{Title: title, Body: body, CategoryID: categoryId}
+func newQuestion(title string, body string, createdAt time.Time, categoryId int) question {
+	return question{Title: title, Body: body, CreatedAt: createdAt, CategoryID: categoryId}
 }
