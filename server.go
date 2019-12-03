@@ -83,7 +83,10 @@ func getQuestions(c echo.Context) error {
 
 	var questions questions
 	db.Where("id < ?", sinceID).Order("id desc").Preload("Category").Limit(limit).Find(&questions)
-	return c.JSON(http.StatusOK, questions)
+	var totalCount int
+	db.Model(&question{}).Count(&totalCount)
+	response := QuestionsResponse{Questions: questions, TotalCount: totalCount}
+	return c.JSON(http.StatusOK, response)
 }
 
 func createQuestion(c echo.Context) error {
@@ -109,6 +112,12 @@ type questionRequest struct {
 type questionsRequest struct {
 	FirstID int `query:"first_id" validate:"required"`
 	Limit   int `query:"limit" validate:"required"`
+}
+
+// Response
+type QuestionsResponse struct {
+	Questions[]question `json:"questions"`
+	TotalCount int `json:"totalCount"`
 }
 
 // Model
