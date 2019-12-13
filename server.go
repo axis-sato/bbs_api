@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/c8112002/bbs_api/app/infrastructure/database"
+	"github.com/c8112002/bbs_api/app/interface/controllers"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -57,8 +59,18 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
 
+	d := database.NewDatabase()
+	d.DB.LogMode(true)
+	d.DB.SetLogger(e.Logger)
+	defer func() {
+		_ = d.DB.Close()
+	}()
+
+	categoryController := controllers.NewCategoryController(d)
+
 	// Routes
-	e.GET("/categories", getCategories)
+	//e.GET("/categories", getCategories)
+	e.GET("/categories", categoryController.ShowAllCategories)
 	e.GET("/questions", getQuestions)
 	e.POST("/questions", createQuestion)
 
@@ -86,6 +98,9 @@ func getQuestions(c echo.Context) error {
 	var totalCount int
 	db.Model(&question{}).Count(&totalCount)
 	response := QuestionsResponse{Questions: questions, TotalCount: totalCount}
+
+	time.Sleep(time.Second * 3)
+
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -100,6 +115,9 @@ func createQuestion(c echo.Context) error {
 	}
 	q := newQuestion(req.Title, req.Body, time.Now(), req.CategoryID)
 	db.Create(&q)
+
+	time.Sleep(time.Second * 3)
+
 	return c.JSON(http.StatusCreated, q)
 }
 

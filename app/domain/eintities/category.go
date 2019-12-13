@@ -11,3 +11,5 @@ func NewCategory(id int, name string) *Category {
 		Name: name,
 	}
 }
+
+type Categories = []Category 
