@@ -1,20 +1,20 @@
 package main
 
 import (
-	"github.com/c8112002/bbs_api/router"
-	"github.com/go-playground/validator/v10"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/labstack/echo/v4"
-	"log"
-	"math"
-	"net/http"
-	"strconv"
 	"time"
+
+	"github.com/c8112002/bbs_api/app/db"
+
+	"github.com/c8112002/bbs_api/app/store"
+
+	"github.com/c8112002/bbs_api/app/handler"
+	"github.com/c8112002/bbs_api/app/router"
+	"github.com/go-playground/validator/v10"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-var db *gorm.DB
-var err error
+//var db *gorm.DB
+//var err error
 
 type CustomValidator struct {
 	validator *validator.Validate
@@ -24,86 +24,92 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return cv.validator.Struct(i)
 }
 
-func validateCategoryId(fl validator.FieldLevel) bool {
-	categoryId := fl.Field().Int()
-	c := new(category)
-	db.First(&c, categoryId)
-	return c.ID == int(categoryId)
-}
+//func validateCategoryId(fl validator.FieldLevel) bool {
+//	categoryId := fl.Field().Int()
+//	c := new(category)
+//	db.First(&c, categoryId)
+//	return c.ID == int(categoryId)
+//}
 
 func main() {
 
-	db, err = gorm.Open("mysql", "bbs:bbspassword@tcp(localhost:3306)/bbs?charset=utf8mb4&parseTime=True&loc=Local")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	db.LogMode(true)
-
-	defer func() {
-		_ = db.Close()
-	}()
+	//db, err = gorm.Open("mysql", "bbs:bbspassword@tcp(localhost:3306)/bbs?charset=utf8mb4&parseTime=True&loc=Local")
+	//
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//db.LogMode(true)
+	//
+	//defer func() {
+	//	_ = db.Close()
+	//}()
 
 	r := router.New()
+	v1 := r.Group("/api")
+
+	d := db.New(r)
+
+	cs := store.NewCategoryStore(d)
+	h := handler.NewHandler(cs)
+	h.Register(v1)
 
 	//v:= validator.New()
 	//_ = v.RegisterValidation("categoryId", validateCategoryId)
 	//e.Validator = &CustomValidator{validator: v}
 
-	db.SetLogger(r.Logger)
-
+	//db.SetLogger(r.Logger)
 
 	// Routes
-	r.GET("/categories", getCategories)
-	r.GET("/questions", getQuestions)
-	r.POST("/questions", createQuestion)
+	//r.GET("/categories", getCategories)
+	//r.GET("/questions", getQuestions)
+	//r.POST("/questions", createQuestion)
 
 	r.Logger.Fatal(r.Start(":1234"))
 }
 
-func getCategories(c echo.Context) error {
-	var categories categories
-	db.Find(&categories)
-	return c.JSON(http.StatusOK, categories)
-}
-
-func getQuestions(c echo.Context) error {
-	sinceID, err := strconv.Atoi(c.QueryParam("since_id"))
-	if err != nil {
-		sinceID = math.MaxInt64
-	}
-	limit, err := strconv.Atoi(c.QueryParam("limit"))
-	if err != nil {
-		limit = 20
-	}
-
-	var questions questions
-	db.Where("id < ?", sinceID).Order("id desc").Preload("Category").Limit(limit).Find(&questions)
-	var totalCount int
-	db.Model(&question{}).Count(&totalCount)
-	response := QuestionsResponse{Questions: questions, TotalCount: totalCount}
-	return c.JSON(http.StatusOK, response)
-}
-
-func createQuestion(c echo.Context) error {
-	// TODO: エラーレスポンスをJSONにする
-	req := new(questionRequest)
-	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-	if err = c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-	q := newQuestion(req.Title, req.Body, time.Now(), req.CategoryID)
-	db.Create(&q)
-	return c.JSON(http.StatusCreated, q)
-}
+//func getCategories(c echo.Context) error {
+//	var categories categories
+//	db.Find(&categories)
+//	return c.JSON(http.StatusOK, categories)
+//}
+//
+//func getQuestions(c echo.Context) error {
+//	sinceID, err := strconv.Atoi(c.QueryParam("since_id"))
+//	if err != nil {
+//		sinceID = math.MaxInt64
+//	}
+//	limit, err := strconv.Atoi(c.QueryParam("limit"))
+//	if err != nil {
+//		limit = 20
+//	}
+//
+//	var questions questions
+//	db.Where("id < ?", sinceID).Order("id desc").Preload("Category").Limit(limit).Find(&questions)
+//	var totalCount int
+//	db.Model(&question{}).Count(&totalCount)
+//	response := QuestionsResponse{Questions: questions, TotalCount: totalCount}
+//	return c.JSON(http.StatusOK, response)
+//}
+//
+//func createQuestion(c echo.Context) error {
+//	// TODO: エラーレスポンスをJSONにする
+//	req := new(questionRequest)
+//	if err := c.Bind(req); err != nil {
+//		return c.JSON(http.StatusBadRequest, err.Error())
+//	}
+//	if err = c.Validate(req); err != nil {
+//		return c.JSON(http.StatusBadRequest, err.Error())
+//	}
+//	q := newQuestion(req.Title, req.Body, time.Now(), req.CategoryID)
+//	db.Create(&q)
+//	return c.JSON(http.StatusCreated, q)
+//}
 
 // Request
 type questionRequest struct {
-	Title  string `json:"title" validate:"required,min=1,max=255"`
-	Body string   `json:"body" validate:"required,min=1,max=5000"`
-	CategoryID int   `json:"categoryId" validate:"required,categoryId"`
+	Title      string `json:"title" validate:"required,min=1,max=255"`
+	Body       string `json:"body" validate:"required,min=1,max=5000"`
+	CategoryID int    `json:"categoryId" validate:"required,categoryId"`
 }
 type questionsRequest struct {
 	FirstID int `query:"first_id" validate:"required"`
@@ -112,8 +118,8 @@ type questionsRequest struct {
 
 // Response
 type QuestionsResponse struct {
-	Questions[]question `json:"questions"`
-	TotalCount int `json:"totalCount"`
+	Questions  []question `json:"questions"`
+	TotalCount int        `json:"totalCount"`
 }
 
 // Model
@@ -125,12 +131,12 @@ type category struct {
 type categories = []category
 
 type question struct {
-	ID int   `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
-	Title string   `json:"title" gorm:"column:title"`
-	Body string   `json:"body" gorm:"column:body"`
-	CreatedAt time.Time   `json:"createdAt" gorm:"column:created_at"`
-	CategoryID int   `json:"categoryId" gorm:"column:category_id"`
-	Category category   `json:"category"`
+	ID         int       `json:"id" gorm:"column:id;primary_key;AUTO_INCREMENT"`
+	Title      string    `json:"title" gorm:"column:title"`
+	Body       string    `json:"body" gorm:"column:body"`
+	CreatedAt  time.Time `json:"createdAt" gorm:"column:created_at"`
+	CategoryID int       `json:"categoryId" gorm:"column:category_id"`
+	Category   category  `json:"category"`
 }
 
 type questions = []question
