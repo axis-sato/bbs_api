@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/c8112002/bbs_api/router"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"log"
 	"math"
 	"net/http"
@@ -44,25 +44,21 @@ func main() {
 		_ = db.Close()
 	}()
 
-	e := echo.New()
+	r := router.New()
 
-	v:= validator.New()
-	_ = v.RegisterValidation("categoryId", validateCategoryId)
-	e.Validator = &CustomValidator{validator: v}
+	//v:= validator.New()
+	//_ = v.RegisterValidation("categoryId", validateCategoryId)
+	//e.Validator = &CustomValidator{validator: v}
 
-	db.SetLogger(e.Logger)
+	db.SetLogger(r.Logger)
 
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
 
 	// Routes
-	e.GET("/categories", getCategories)
-	e.GET("/questions", getQuestions)
-	e.POST("/questions", createQuestion)
+	r.GET("/categories", getCategories)
+	r.GET("/questions", getQuestions)
+	r.POST("/questions", createQuestion)
 
-	e.Logger.Fatal(e.Start(":1234"))
+	r.Logger.Fatal(r.Start(":1234"))
 }
 
 func getCategories(c echo.Context) error {
