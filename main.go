@@ -50,7 +50,8 @@ func main() {
 	d := db.New(r)
 
 	cs := store.NewCategoryStore(d)
-	h := handler.NewHandler(cs)
+	qs := store.NewQuestionStore(d)
+	h := handler.NewHandler(cs, qs)
 	h.Register(v1)
 
 	//v:= validator.New()
