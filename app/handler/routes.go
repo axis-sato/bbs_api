@@ -8,4 +8,5 @@ func (h *Handler) Register(v1 *echo.Group) {
 
 	questions := v1.Group("/questions")
 	questions.GET("", h.Questions)
+	questions.POST("", h.CreateQuestion)
 }

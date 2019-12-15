@@ -40,3 +40,14 @@ func (qs *QuestionStore) TotalCount() (int, error) {
 	}
 	return tc, err
 }
+
+func (qs *QuestionStore) CreateQuestion(q *model.Question) error {
+	if err := qs.db.Create(&q).Error; err != nil {
+		return err
+	}
+	if err := qs.db.Where(q.ID).Preload("Category").Find(&q).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

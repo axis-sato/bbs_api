@@ -46,18 +46,21 @@ type questionListResponse struct {
 	TotalCount int                 `json:"totalCount"`
 }
 
+func NewQuestionResponse(q *model.Question) *questionResponse {
+	return &questionResponse{
+		ID:        q.ID,
+		Title:     q.Title,
+		Body:      q.Body,
+		CreatedAt: q.CreatedAt,
+		Category:  newCategoryResponse(q.Category),
+	}
+}
+
 func NewQuestionListResponse(questions model.Questions, totalCount int) *questionListResponse {
 	r := new(questionListResponse)
 
 	for _, q := range questions {
-		qr := &questionResponse{
-			ID:        q.ID,
-			Title:     q.Title,
-			Body:      q.Body,
-			CreatedAt: q.CreatedAt,
-			Category:  newCategoryResponse(q.Category),
-		}
-
+		qr := NewQuestionResponse(&q)
 		r.Questions = append(r.Questions, qr)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/c8112002/bbs_api/app/model"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/common/log"
 )
@@ -32,4 +33,21 @@ func (h *Handler) Questions(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, NewQuestionListResponse(m, tc))
+}
+
+func (h *Handler) CreateQuestion(c echo.Context) error {
+	req := new(questionCreateRequest)
+	var q model.Question
+
+	if err := req.bind(c, &q); err != nil {
+		// TODO: エラーレスポンスを返す
+		log.Error(err)
+	}
+
+	if err := h.questionStore.CreateQuestion(&q); err != nil {
+		// TODO: エラーレスポンスを返す
+		log.Error(err)
+	}
+
+	return c.JSON(http.StatusOK, NewQuestionResponse(&q))
 }
