@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/c8112002/bbs_api/app/model"
+	model2 "github.com/c8112002/bbs_api/internal/api/model"
 	"github.com/jinzhu/gorm"
 )
 
@@ -15,8 +15,8 @@ func NewQuestionStore(db *gorm.DB) *QuestionStore {
 	}
 }
 
-func (qs *QuestionStore) List(sinceID int, limit int) (model.Questions, error) {
-	var m model.Questions
+func (qs *QuestionStore) List(sinceID int, limit int) (model2.Questions, error) {
+	var m model2.Questions
 
 	err := qs.db.
 		Where("id < ?", sinceID).
@@ -33,7 +33,7 @@ func (qs *QuestionStore) List(sinceID int, limit int) (model.Questions, error) {
 
 func (qs *QuestionStore) TotalCount() (int, error) {
 	var tc int
-	err := qs.db.Model(&model.Question{}).Count(&tc).Error
+	err := qs.db.Model(&model2.Question{}).Count(&tc).Error
 
 	if err != nil {
 		return 0, err
@@ -41,7 +41,7 @@ func (qs *QuestionStore) TotalCount() (int, error) {
 	return tc, err
 }
 
-func (qs *QuestionStore) CreateQuestion(q *model.Question) error {
+func (qs *QuestionStore) CreateQuestion(q *model2.Question) error {
 	if err := qs.db.Create(&q).Error; err != nil {
 		return err
 	}

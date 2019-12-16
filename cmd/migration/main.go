@@ -3,15 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	migration "github.com/rubenv/sql-migrate"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-)
 
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+	migration "github.com/rubenv/sql-migrate"
+)
 
 func main() {
 	db, err := gorm.Open("mysql", "bbs:bbspassword@tcp(localhost:3306)/bbs?charset=utf8mb4&parseTime=True&loc=Local")
@@ -20,7 +20,6 @@ func main() {
 		log.Fatal(err)
 	}
 	db.LogMode(true)
-
 
 	flag.Parse()
 	cmd := flag.Arg(0)
@@ -35,10 +34,10 @@ func main() {
 	}
 }
 
-func migrate(db *gorm.DB)  {
+func migrate(db *gorm.DB) {
 
 	migrations := &migration.FileMigrationSource{
-		Dir: "database/migrations",
+		Dir: "configs/migration/migrations",
 	}
 
 	cmd := flag.Arg(1)
@@ -61,15 +60,14 @@ func migrate(db *gorm.DB)  {
 		m(migration.Up)
 	} else {
 		fmt.Println("実行可能なコマンドは以下です。")
-		fmt.Println("go run database/main.go migrate [up|down]")
+		fmt.Println("go run cmd/migration/main.go migrate [up|down]")
 	}
 }
-
 
 func seed(db *gorm.DB) {
 	fmt.Println("run seeding")
 
-	dir := "database/seeds"
+	dir := "configs/migration/seeds"
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -89,7 +87,7 @@ func seed(db *gorm.DB) {
 
 func executeSQL(db *gorm.DB, file string) {
 	f, err := os.Open(file)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}

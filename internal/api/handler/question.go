@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/c8112002/bbs_api/app/model"
+	model2 "github.com/c8112002/bbs_api/internal/api/model"
+
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/common/log"
 )
@@ -37,7 +38,7 @@ func (h *Handler) Questions(c echo.Context) error {
 
 func (h *Handler) CreateQuestion(c echo.Context) error {
 	req := new(questionCreateRequest)
-	var q model.Question
+	var q model2.Question
 
 	if err := req.bind(c, &q); err != nil {
 		// TODO: エラーレスポンスを返す

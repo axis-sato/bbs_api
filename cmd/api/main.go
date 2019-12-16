@@ -1,11 +1,10 @@
 package main
 
 import (
-	"github.com/c8112002/bbs_api/app/db"
-	"github.com/c8112002/bbs_api/app/handler"
-	"github.com/c8112002/bbs_api/app/router"
-	"github.com/c8112002/bbs_api/app/store"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/c8112002/bbs_api/internal/api/db"
+	"github.com/c8112002/bbs_api/internal/api/handler"
+	"github.com/c8112002/bbs_api/internal/api/router"
+	"github.com/c8112002/bbs_api/internal/api/store"
 )
 
 func main() {

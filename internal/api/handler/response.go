@@ -3,7 +3,7 @@ package handler
 import (
 	"time"
 
-	"github.com/c8112002/bbs_api/app/model"
+	model2 "github.com/c8112002/bbs_api/internal/api/model"
 )
 
 type categoryResponse struct {
@@ -15,7 +15,7 @@ type categoryListResponse struct {
 	Categories []*categoryResponse `json:"categories"`
 }
 
-func NewCategoryListResponse(categories model.Categories) *categoryListResponse {
+func NewCategoryListResponse(categories model2.Categories) *categoryListResponse {
 	r := new(categoryListResponse)
 
 	for _, c := range categories {
@@ -26,7 +26,7 @@ func NewCategoryListResponse(categories model.Categories) *categoryListResponse 
 	return r
 }
 
-func newCategoryResponse(c model.Category) *categoryResponse {
+func newCategoryResponse(c model2.Category) *categoryResponse {
 	return &categoryResponse{
 		ID:   c.ID,
 		Name: c.Name,
@@ -46,7 +46,7 @@ type questionListResponse struct {
 	TotalCount int                 `json:"totalCount"`
 }
 
-func NewQuestionResponse(q *model.Question) *questionResponse {
+func NewQuestionResponse(q *model2.Question) *questionResponse {
 	return &questionResponse{
 		ID:        q.ID,
 		Title:     q.Title,
@@ -56,7 +56,7 @@ func NewQuestionResponse(q *model.Question) *questionResponse {
 	}
 }
 
-func NewQuestionListResponse(questions model.Questions, totalCount int) *questionListResponse {
+func NewQuestionListResponse(questions model2.Questions, totalCount int) *questionListResponse {
 	r := new(questionListResponse)
 
 	for _, q := range questions {

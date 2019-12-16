@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/c8112002/bbs_api/app/model"
+	model2 "github.com/c8112002/bbs_api/internal/api/model"
 	"github.com/labstack/echo/v4"
 )
 
@@ -13,7 +13,7 @@ type questionCreateRequest struct {
 	} `json:"question"`
 }
 
-func (r *questionCreateRequest) bind(c echo.Context, q *model.Question) error {
+func (r *questionCreateRequest) bind(c echo.Context, q *model2.Question) error {
 	if err := c.Bind(r); err != nil {
 		return err
 	}
