@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -24,10 +23,9 @@ func Testカテゴリ一覧取得(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	assert.NoError(t, h.Categories(c))
-	if assert.Equal(t, http.StatusOK, rec.Code) {
-		var cr categoryListResponse
-		err := json.Unmarshal(rec.Body.Bytes(), &cr)
-		assert.NoError(t, err)
-		assert.Equal(t, 2, len(cr.Categories))
-	}
+	assertResponse(t, rec.Result(), 200, "./testdata/category/category_list_response.golden")
+	var cr categoryListResponse
+	err := json.Unmarshal(rec.Body.Bytes(), &cr)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(cr.Categories))
 }
