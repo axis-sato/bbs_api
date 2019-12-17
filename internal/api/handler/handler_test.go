@@ -4,22 +4,28 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/c8112002/bbs_api/pkg"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/c8112002/bbs_api/internal/api/model"
 
-	category2 "github.com/c8112002/bbs_api/internal/api/category"
-	db2 "github.com/c8112002/bbs_api/internal/api/db"
-	question2 "github.com/c8112002/bbs_api/internal/api/question"
-	router2 "github.com/c8112002/bbs_api/internal/api/router"
-	store2 "github.com/c8112002/bbs_api/internal/api/store"
+	"github.com/c8112002/bbs_api/internal/api/category"
+	"github.com/c8112002/bbs_api/internal/api/db"
+	"github.com/c8112002/bbs_api/internal/api/question"
+	"github.com/c8112002/bbs_api/internal/api/router"
+	"github.com/c8112002/bbs_api/internal/api/store"
 
 	"github.com/labstack/echo/v4"
 
@@ -29,20 +35,22 @@ import (
 var (
 	d      *gorm.DB
 	h      *Handler
-	cs     category2.Store
-	qs     question2.Store
+	cs     category.Store
+	qs     question.Store
 	_      *echo.Echo
 	update = flag.Bool("update", false, "update .golden files")
 )
 
 func setup() {
-	d = db2.TestDB()
-	cs = store2.NewCategoryStore(d)
-	qs = store2.NewQuestionStore(d)
+	d = db.TestDB()
+	cs = store.NewCategoryStore(d)
+	qs = store.NewQuestionStore(d)
 	h = NewHandler(cs, qs)
-	_ = router2.New()
+	_ = router.New()
 
-	if err := db2.Migrate(d); err != nil {
+	pkg.Freeze(time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local))
+
+	if err := db.Migrate(d); err != nil {
 		log.Fatal(err)
 	}
 
@@ -53,28 +61,49 @@ func setup() {
 
 func tearDown() {
 	_ = d.Close()
-	if err := db2.DropTestDB(); err != nil {
+	if err := db.DropTestDB(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func loadFixtures() error {
-	c1 := model.Category{
-		ID:   1,
-		Name: "カテゴリ1",
+	var cl []model.Category
+	for i := 1; i <= 2; i++ {
+		c := model.Category{
+			ID:   i,
+			Name: fmt.Sprintf("カテゴリ%d", i),
+		}
+		if err := d.Create(&c).Error; err != nil {
+			return nil
+		}
+		cl = append(cl, c)
 	}
-	if err := d.Create(&c1).Error; err != nil {
-		return nil
-	}
-	c2 := model.Category{
-		ID:   2,
-		Name: "カテゴリ2",
-	}
-	if err := d.Create(&c2).Error; err != nil {
-		return nil
+
+	for i := 1; i <= 20; i++ {
+		c := cl[i%len(cl)]
+		q := model.Question{
+			ID:         i,
+			Title:      fmt.Sprintf("タイトル%d", i),
+			Body:       fmt.Sprintf("本文%d", i),
+			CreatedAt:  pkg.Now(),
+			CategoryID: c.ID,
+			Category:   c,
+		}
+		if err := d.Create(&q).Error; err != nil {
+			return nil
+		}
 	}
 
 	return nil
+}
+
+func newRecAndContext(method, target string, body io.Reader) (*httptest.ResponseRecorder, echo.Context) {
+	e := router.New()
+	req := httptest.NewRequest(method, target, body)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	return rec, c
 }
 
 func assertResponse(t *testing.T, res *http.Response, code int, path string) {
