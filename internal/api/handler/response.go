@@ -3,6 +3,8 @@ package handler
 import (
 	"time"
 
+	"github.com/c8112002/bbs_api/internal/api/utils"
+
 	model2 "github.com/c8112002/bbs_api/internal/api/model"
 )
 
@@ -67,4 +69,24 @@ func NewQuestionListResponse(questions model2.Questions, totalCount int) *questi
 	r.TotalCount = totalCount
 
 	return r
+}
+
+type errorResponse struct {
+	Code  string `json:"code"`
+	Field string `json:"field"`
+}
+
+type errorListResponse struct {
+	Errors []errorResponse `json:"errors"`
+}
+
+func NewErrorResponse(el []utils.Error) *errorListResponse {
+	er := new(errorListResponse)
+	for _, e := range el {
+		er.Errors = append(er.Errors, errorResponse{
+			Code:  e.Code,
+			Field: e.Field,
+		})
+	}
+	return er
 }
