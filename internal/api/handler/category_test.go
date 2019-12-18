@@ -16,7 +16,7 @@ func Testカテゴリ一覧取得(t *testing.T) {
 	rec, c := newRecAndContext(echo.GET, "/api/categories", nil)
 
 	assert.NoError(t, h.Categories(c))
-	assertResponse(t, rec.Result(), 200, "./testdata/category/category_list_response.golden")
+	assertResponse(t, rec.Result(), 200, "./testdata/category/category_list.golden")
 	var cr categoryListResponse
 	err := json.Unmarshal(rec.Body.Bytes(), &cr)
 	assert.NoError(t, err)
