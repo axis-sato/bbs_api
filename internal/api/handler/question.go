@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/c8112002/bbs_api/pkg"
+
 	model2 "github.com/c8112002/bbs_api/internal/api/model"
 
 	"github.com/labstack/echo/v4"
@@ -44,6 +46,8 @@ func (h *Handler) CreateQuestion(c echo.Context) error {
 		// TODO: エラーレスポンスを返す
 		log.Error(err)
 	}
+
+	q.CreatedAt = pkg.Now()
 
 	if err := h.questionStore.CreateQuestion(&q); err != nil {
 		// TODO: エラーレスポンスを返す
