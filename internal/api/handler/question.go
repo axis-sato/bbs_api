@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/c8112002/bbs_api/internal/api/utils"
+
 	"github.com/c8112002/bbs_api/pkg"
 
 	model2 "github.com/c8112002/bbs_api/internal/api/model"
@@ -25,14 +27,14 @@ func (h *Handler) Questions(c echo.Context) error {
 
 	m, err := h.questionStore.List(sinceID, limit)
 	if err != nil {
-		// TODO: エラーレスポンスを返す
 		log.Error(err)
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse([]utils.Error{utils.NewInternalServerError()}))
 	}
 
 	tc, err := h.questionStore.TotalCount()
 	if err != nil {
-		// TODO: エラーレスポンスを返す
 		log.Error(err)
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse([]utils.Error{utils.NewInternalServerError()}))
 	}
 
 	return c.JSON(http.StatusOK, NewQuestionListResponse(m, tc))

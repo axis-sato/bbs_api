@@ -2,10 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/c8112002/bbs_api/internal/api/model"
 
@@ -43,7 +46,24 @@ func Test質問一覧取得(t *testing.T) {
 	}
 }
 
-func Testカテゴリ作成(t *testing.T) {
+func Test質問一覧取得_質問取得失敗(t *testing.T) {
+	setup()
+	defer tearDown()
+
+	mqs := new(mockQuestionStore)
+	mqs.On("List", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+
+	h := NewHandler(cs, mqs)
+	rec, c := newRecAndContext(echo.GET, "/api/questions", nil)
+
+	assert.NoError(t, h.Questions(c))
+	assertResponse(t, rec.Result(), 500, "./testdata/question/question_list/question_list_error.golden")
+	var er errorListResponse
+	err := json.Unmarshal(rec.Body.Bytes(), &er)
+	assert.NoError(t, err)
+}
+
+func Test質問作成(t *testing.T) {
 	setup()
 	defer tearDown()
 
@@ -61,4 +81,29 @@ func Testカテゴリ作成(t *testing.T) {
 	var qc int
 	d.Model(&model.Question{}).Count(&qc)
 	assert.Equal(t, 21, qc)
+}
+
+type mockQuestionStore struct {
+	mock.Mock
+}
+
+func (m *mockQuestionStore) List(sinceID int, limit int) (model.Questions, error) {
+	args := m.Called(sinceID, limit)
+
+	var ql model.Questions
+	if args.Get(0) != nil {
+		ql = args.Get(0).(model.Questions)
+	}
+
+	return ql, args.Error(1)
+
+}
+func (m *mockQuestionStore) TotalCount() (int, error) {
+	args := m.Called()
+
+	return args.Int(0), args.Error(1)
+}
+func (m *mockQuestionStore) CreateQuestion(q *model.Question) error {
+	args := m.Called(q)
+	return args.Error(0)
 }
