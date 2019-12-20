@@ -58,7 +58,7 @@ func Test質問一覧取得_質問取得失敗(t *testing.T) {
 
 	assert.NoError(t, h.Questions(c))
 	assertResponse(t, rec.Result(), 500, "./testdata/question/question_list/question_list_error.golden")
-	var er errorListResponse
+	var er errorResponse
 	err := json.Unmarshal(rec.Body.Bytes(), &er)
 	assert.NoError(t, err)
 }

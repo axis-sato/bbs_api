@@ -54,7 +54,7 @@ func Testカテゴリ一覧取得_カテゴリ取得失敗(t *testing.T) {
 
 	assert.NoError(t, h.Categories(c))
 	assertResponse(t, rec.Result(), 500, "./testdata/category/category_list_fetch_category_error.golden")
-	var er errorListResponse
+	var er errorResponse
 	err := json.Unmarshal(rec.Body.Bytes(), &er)
 	assert.NoError(t, err)
 }

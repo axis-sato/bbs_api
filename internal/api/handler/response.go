@@ -71,21 +71,23 @@ func NewQuestionListResponse(questions model2.Questions, totalCount int) *questi
 	return r
 }
 
-type errorResponse struct {
+type errorDetailResponse struct {
 	Code  string `json:"code"`
 	Field string `json:"field"`
 }
 
-type errorListResponse struct {
-	Errors []errorResponse `json:"errors"`
+type errorResponse struct {
+	Message string                `json:"message"`
+	Errors  []errorDetailResponse `json:"errors,omitempty"`
 }
 
-func NewErrorResponse(el []utils.Error) *errorListResponse {
-	er := new(errorListResponse)
-	for _, e := range el {
-		er.Errors = append(er.Errors, errorResponse{
-			Code:  e.Code,
-			Field: e.Field,
+func NewErrorResponse(e utils.Error) *errorResponse {
+	er := new(errorResponse)
+	er.Message = e.Message
+	for _, ed := range e.Errors {
+		er.Errors = append(er.Errors, errorDetailResponse{
+			Code:  ed.Code,
+			Field: ed.Field,
 		})
 	}
 	return er

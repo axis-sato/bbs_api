@@ -13,7 +13,7 @@ func (h *Handler) Categories(c echo.Context) error {
 	m, err := h.categoryStore.GetAllCategories()
 	if err != nil {
 		log.Error(err)
-		return c.JSON(http.StatusInternalServerError, NewErrorResponse([]utils.Error{utils.NewInternalServerError()}))
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewInternalServerError()))
 	}
 
 	return c.JSON(http.StatusOK, NewCategoryListResponse(m))

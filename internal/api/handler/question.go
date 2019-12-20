@@ -28,13 +28,13 @@ func (h *Handler) Questions(c echo.Context) error {
 	m, err := h.questionStore.List(sinceID, limit)
 	if err != nil {
 		log.Error(err)
-		return c.JSON(http.StatusInternalServerError, NewErrorResponse([]utils.Error{utils.NewInternalServerError()}))
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewInternalServerError()))
 	}
 
 	tc, err := h.questionStore.TotalCount()
 	if err != nil {
 		log.Error(err)
-		return c.JSON(http.StatusInternalServerError, NewErrorResponse([]utils.Error{utils.NewInternalServerError()}))
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewInternalServerError()))
 	}
 
 	return c.JSON(http.StatusOK, NewQuestionListResponse(m, tc))
