@@ -72,7 +72,7 @@ func Test質問作成(t *testing.T) {
 	rec, c := newRecAndContext(echo.POST, "/api/questions", strings.NewReader(requestJson))
 
 	assert.NoError(t, h.CreateQuestion(c))
-	assertResponse(t, rec.Result(), 200, "./testdata/question/create_question.golden")
+	assertResponse(t, rec.Result(), 200, "./testdata/question/create_question/success.golden")
 
 	var qr questionResponse
 	err := json.Unmarshal(rec.Body.Bytes(), &qr)
@@ -81,6 +81,66 @@ func Test質問作成(t *testing.T) {
 	var qc int
 	d.Model(&model.Question{}).Count(&qc)
 	assert.Equal(t, 21, qc)
+}
+
+func Test質問作成_質問作成失敗(t *testing.T) {
+	setup()
+	defer tearDown()
+
+	mqs := new(mockQuestionStore)
+	mqs.On("CreateQuestion", mock.Anything).Return(errors.New("db error"))
+
+	h := NewHandler(cs, mqs)
+
+	requestJson := `{"question": {"title": "テストタイトル", "body": "テスト本文", "categoryId": 1}}`
+
+	rec, c := newRecAndContext(echo.POST, "/api/questions", strings.NewReader(requestJson))
+
+	assert.NoError(t, h.CreateQuestion(c))
+	assertResponse(t, rec.Result(), 500, "./testdata/question/create_question/create_error.golden")
+
+	var er errorResponse
+	err := json.Unmarshal(rec.Body.Bytes(), &er)
+	assert.NoError(t, err)
+
+	var qc int
+	d.Model(&model.Question{}).Count(&qc)
+	assert.Equal(t, 20, qc)
+}
+
+func Test質問作成_バリデーションエラー(t *testing.T) {
+	setup()
+	defer tearDown()
+
+	testcases := []struct {
+		tname       string
+		requestJson string
+		golden      string
+	}{
+		{tname: "titleなし", requestJson: `{"question": {"body": "テスト本文", "categoryId": 1}}`, golden: "no_title_error.golden"},
+		{tname: "bodyなし", requestJson: `{"question": {"title": "テストタイトル", "categoryId": 1}}`, golden: "no_body_error.golden"},
+		{tname: "カテゴリIDなし", requestJson: `{"question": {"title": "テストタイトル", "body": "テスト本文"}}`, golden: "no_category_id_error.golden"},
+		{tname: "カテゴリIDが数値ではない", requestJson: `{"question": {"title": "テストタイトル", "body": "テスト本文", "categoryId": "foo"}}`, golden: "category_id_not_numeric_error.golden"},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.tname, func(t *testing.T) {
+
+			rec, c := newRecAndContext(echo.POST, "/api/questions", strings.NewReader(tc.requestJson))
+
+			assert.NoError(t, h.CreateQuestion(c))
+			assertResponse(t, rec.Result(), 400, filepath.Join("./testdata/question/create_question/", tc.golden))
+
+			var er errorResponse
+			err := json.Unmarshal(rec.Body.Bytes(), &er)
+			assert.NoError(t, err)
+
+			var qc int
+			d.Model(&model.Question{}).Count(&qc)
+			assert.Equal(t, 20, qc)
+		})
+	}
+
 }
 
 type mockQuestionStore struct {

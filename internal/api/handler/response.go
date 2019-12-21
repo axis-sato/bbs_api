@@ -83,8 +83,8 @@ type errorResponse struct {
 
 func NewErrorResponse(e utils.Error) *errorResponse {
 	er := new(errorResponse)
-	er.Message = e.Message
-	for _, ed := range e.Errors {
+	er.Message = e.Error
+	for _, ed := range e.Details {
 		er.Errors = append(er.Errors, errorDetailResponse{
 			Code:  ed.Code,
 			Field: ed.Field,

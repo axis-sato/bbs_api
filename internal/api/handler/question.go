@@ -28,13 +28,13 @@ func (h *Handler) Questions(c echo.Context) error {
 	m, err := h.questionStore.List(sinceID, limit)
 	if err != nil {
 		log.Error(err)
-		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewInternalServerError()))
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewError(err)))
 	}
 
 	tc, err := h.questionStore.TotalCount()
 	if err != nil {
 		log.Error(err)
-		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewInternalServerError()))
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewError(err)))
 	}
 
 	return c.JSON(http.StatusOK, NewQuestionListResponse(m, tc))
@@ -45,15 +45,15 @@ func (h *Handler) CreateQuestion(c echo.Context) error {
 	var q model2.Question
 
 	if err := req.bind(c, &q); err != nil {
-		// TODO: エラーレスポンスを返す
 		log.Error(err)
+		return c.JSON(http.StatusBadRequest, NewErrorResponse(utils.NewError(err)))
 	}
 
 	q.CreatedAt = pkg.Now()
 
 	if err := h.questionStore.CreateQuestion(&q); err != nil {
-		// TODO: エラーレスポンスを返す
 		log.Error(err)
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(utils.NewError(err)))
 	}
 
 	return c.JSON(http.StatusOK, NewQuestionResponse(&q))

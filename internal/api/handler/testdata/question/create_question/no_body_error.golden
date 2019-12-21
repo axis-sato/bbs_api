@@ -1,0 +1,9 @@
+{
+  "message": "Validation Error",
+  "errors": [
+    {
+      "code": "required",
+      "field": "Body"
+    }
+  ]
+}
